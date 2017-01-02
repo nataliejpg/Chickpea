@@ -53,14 +53,14 @@ class Sequence:
 
     def unwrap(self):
         chan_list = self.channels_used()
-        wf_lists = [[[]] * len(self._elements)] * len(chan_list)
-        m1_lists = [[[]] * len(self._elements)] * len(chan_list)
-        m2_lists = [[[]] * len(self._elements)] * len(chan_list)
-        for j, element in enumerate(self._elements):
+        wf_lists = [[] for c in chan_list]
+        m1_lists = [[] for c in chan_list]
+        m2_lists = [[] for c in chan_list]
+        for element in self._elements:
             for i, chan in enumerate(chan_list):
-                wf_lists[i][j] = element[chan].wave
-                m1_lists[i][j] = element[chan].marker_1
-                m2_lists[i][j] = element[chan].marker_2
+                wf_lists[i].append(element[chan].wave)
+                m1_lists[i].append(element[chan].marker_1)
+                m2_lists[i].append(element[chan].marker_2)
         if isinstance(self.nreps, int):
             nrep_list = [self.nreps] * len(self._elements)
         else:
@@ -70,7 +70,8 @@ class Sequence:
         else:
             trig_wait_list = self.trig_waits
         if isinstance(self.goto_states, int):
-            goto_state_list = [self.goto_states] * len(self._elements)
+            goto_state_list = np.arange(len(self._elements)) + 2
+            goto_state_list[-1] = 1
         else:
             goto_state_list = self.goto_states
         if isinstance(self.jump_tos, int):
@@ -159,3 +160,7 @@ class Sequence:
                 'the elements of this sequence are '
                 'not of lengths [l, l, ...] or lengths'
                 ' [m, l, l, ...] where m > l : {}'.format(str(lengths)))
+        if option2:
+            raise NotImplementedError('awg upload doesn\'t support '
+                                      '  [m, l, l, ...] where m > l format:'
+                                      ' format given: {}'.format(str(lengths)))
