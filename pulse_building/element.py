@@ -4,6 +4,14 @@ from . import Waveform
 
 class Element:
     def __init__(self):
+        """
+        Element class which represents the element of a sequence
+        and is a dictionary of the waveforms running on channels of
+        the AWG at one point in time.
+        ie one element has many waveforms (one per channel)
+           one sequence has many elements
+        """
+
         self._waveforms = {}
 
     def __getitem__(self, key):
@@ -30,11 +38,19 @@ class Element:
         self._waveforms.clear()
 
     def add_waveform(self, waveform):
+        """
+        Function which adds a Waveform to the waveform dictionary
+        """
         if not isinstance(waveform, Waveform):
             raise TypeError('cannot add waveform not of type Waveform')
         self[waveform.channel] = waveform
 
     def check(self):
+        """
+        Function which checks the element dictionary to have nonzero
+        length and that all the waveforms in the dictionary are of
+        equal length and then calls the waveform internal check on each.
+        """
         if not self._waveforms:
             raise Exception('no waveforms in element')
         lengths = [w.length for w in self._waveforms.values()]
