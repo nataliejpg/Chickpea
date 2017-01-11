@@ -2,7 +2,8 @@ import numpy as np
 
 # TODO: test checks
 # TODO: write tests
-# TODO: check sequence slicing
+# TODO: check sequence slicing behaviour
+# TODO: decide whether to limit setattr behaviour, code at bottom
 
 
 class Waveform:
@@ -149,9 +150,6 @@ class Waveform:
         self._marker_2 = marker_2_array.astype(int)
 
     marker_2 = property(_get_marker_2, _set_marker_2)
-
-    # TODO: decide whether to include below to limit setting waveform
-    # attributes
 
     # def __setattr__(self, name, value):
     # if name not in ('wave', 'marker_1', 'marker_2','length'):

@@ -1,6 +1,10 @@
 import copy
 from . import Waveform
 
+# TODO: test 'check' behaviour
+# TODO: write tests
+# TODO: decide whether to limit setattr behaviour, code in waveform
+
 
 class Element:
     def __init__(self):

@@ -2,6 +2,11 @@ import numpy as np
 import copy
 from . import Element
 
+# TODO: test 'check' behaviour
+# TODO: write tests
+# TODO: make _test_sequence_variables test that variable values are valid
+# TODO: decide whether to limit setattr behaviour, code at bottom
+
 
 class Sequence:
     def __init__(self, name=None, variable=None, variable_unit=None,
