@@ -82,6 +82,20 @@ class Sequence:
     def __iter__(self):
         return iter(self._elements)
 
+    def clear(self):
+        """
+        Functions which deletes contents of elements and variables lists sets stored values to None
+        """
+        del self._elements[:]
+        del self.trig_waits[:]
+        del self.nreps[:]
+        del self.goto_states[:]
+        del self.jump_tos[:]
+        self.name = None
+        self.variable = None
+        self.variable_unit = None
+        self.variable_array = None
+
     def unwrap(self):
         """
         Function which unwraps the sequence into a tuple of lists which
@@ -89,7 +103,7 @@ class Sequence:
         make_send_and_load_awg_file function.
 
         Returns:
-            - (waves, m1s, m2s, nreps, trig_waits,
+            - tuple of (waves, m1s, m2s, nreps, trig_waits,
                goto_states, jump_tos, channels)
 
                waves is of the form:
@@ -129,6 +143,52 @@ class Sequence:
         return (wf_lists, m1_lists, m2_lists, nrep_list,
                 trig_wait_list, goto_state_list, jump_to_list, chan_list)
 
+    def wrap(self, tup):
+        """
+        Function which reconstructs a Sequence object from the tuple object
+        returned by the parse_awg_file function of the AWGFileParser in the  
+        QCoDeS Tektronix AWG5014 driver.
+
+        Args:
+            -  tuple: (tuple, dict), where the first tuple is \
+          (wfms, m1s, m2s, nreps, trigs, gotos, jumps, channels) \
+          and the dict contains all instrument settings from the file
+
+        Returns:
+            - Sequence object corresponding to the sequence in the file
+        """
+        (wf_lists, m1_lists, m2_lists, nrep_list,
+         trig_wait_list, goto_state_list, jump_to_list, chan_list) = tup[0]
+
+        elem_length = len(wf_lists[0])
+        chan_length = len(chan_list)
+        if any(len(lst) != elem_length for lst in [m1_lists[0], m2_lists[0], nrep_list, trig_wait_list, goto_state_list, jump_to_list]):
+            raise ValueError('Cannot form Sequence: not all from (wf_lists, m1_lists, m2_lists, nrep_list,'
+         'trig_wait_list, goto_state_list, jump_to_list, chan_list) have same '
+         'length (corresponding to element number)')
+        elif any(len(lst) != chan_length for lst in [wf_lists, m1_lists, m2_lists]):
+            raise ValueError('Not all from Cannot from  (chan_list, wf_lists, m1_lists, m2_lists) provided for Sequence building have same '
+         'length (corresponding to number of channels used)')
+
+        self.clear()
+
+        self.nreps = nrep_list
+        self.trig_waits = trig_wait_list
+        self.goto_states = goto_states
+        self.jump_tos = jump_to_list
+
+        for j in range(elem_length):
+            element = Element()
+            for i, chan in enumerate(chan_list):
+                waveform = Waveform(channel=chan)
+                waveform.wave = wf_lists[i][j]
+                waveform.marker_1 = m1_lists[i][j]
+                waveform.marker_2 = m2_lists[i][j]
+                element.add_waveform(waveform)
+            self.add_element(element)
+
+        self.check()
+
     def set_variable_array(self, start, stop, step):
         """
         Function which sets the linear array of the variable being
@@ -141,9 +201,6 @@ class Sequence:
         """
         number = int((stop - start) / step + 1)
         self.variable_array = np.linspace(start, stop, num=number)
-
-    def clear(self):
-        self._elements.clear()
 
     def add_element(self, element):
         """

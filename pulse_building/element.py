@@ -39,6 +39,9 @@ class Element:
         del self._waveforms[key]
 
     def clear(self):
+        """
+        Function which empties dictionary
+        """
         self._waveforms.clear()
 
     def add_waveform(self, waveform):

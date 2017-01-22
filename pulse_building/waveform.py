@@ -3,8 +3,6 @@ import numpy as np
 # TODO: test checks
 # TODO: write tests
 # TODO: check sequence slicing behaviour
-# TODO: decide whether to limit setattr behaviour, code at bottom
-
 
 class Waveform:
     def __init__(self, length=None, channel=None):
