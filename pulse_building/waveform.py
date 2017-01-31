@@ -4,6 +4,7 @@ import numpy as np
 # TODO: write tests
 # TODO: check sequence slicing behaviour
 
+
 class Waveform:
     def __init__(self, length=None, channel=None):
         """
