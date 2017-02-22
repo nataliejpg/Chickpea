@@ -73,8 +73,8 @@ class Element:
                     'error in waveform {}: {}'.format(i, e))
         return True
 
-    def unwrap_4dsp(self, elemnum):
-        f = open('waveform_' + str(elemnum) + '.txt', 'w')
+    def unwrap_4dsp(self):
+        f = open('waveform_0.txt', 'w')
         c_16B2CMAX = 32767
         l_wave = list(self.values())[0].length
         l_chans = len(list(self.keys())) * 3
@@ -96,7 +96,6 @@ class Element:
                 f.write(str(int(self._waveforms[ch].marker_2[s] * c_16B2CMAX)) + '\n')
             for i in range(8 - l_chans):
                 f.write('0\n')
-            f.write('\n')
 
         # close the file
         f.close()
