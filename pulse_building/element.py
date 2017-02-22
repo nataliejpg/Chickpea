@@ -73,6 +73,34 @@ class Element:
                     'error in waveform {}: {}'.format(i, e))
         return True
 
+    def unwrap_4dsp(self, elemnum):
+        f = open('waveform_' + str(elemnum) + '.txt', 'w')
+        c_16B2CMAX = 32767
+        l_wave = list(self.values())[0].length
+        l_chans = len(list(self.keys())) * 3
+        chans = list(self.keys())
+        chans.sort()
+        if l_chans > 6:
+            raise ValueError('num of chans needed for waveforms'
+                             ' plus markers not 6')
+
+        # write the sizes to the file
+        for ch in range(8):
+            f.write(str(l_wave) + '\n')
+
+        # compute the waveform samples and write them to the file
+        for s in range(l_wave):
+            for ch in chans:
+                f.write(str(int(self._waveforms[ch].wave[s] * c_16B2CMAX)) + '\n')
+                f.write(str(int(self._waveforms[ch].marker_1[s] * c_16B2CMAX)) + '\n')
+                f.write(str(int(self._waveforms[ch].marker_2[s] * c_16B2CMAX)) + '\n')
+            for i in range(8 - l_chans):
+                f.write('0\n')
+            f.write('\n')
+
+        # close the file
+        f.close()
+
     def copy(self):
         return copy.copy(self)
 

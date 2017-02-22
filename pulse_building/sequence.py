@@ -84,7 +84,8 @@ class Sequence:
 
     def clear(self):
         """
-        Functions which deletes contents of elements and variables lists sets stored values to None
+        Functions which deletes contents of elements and variables lists
+        sets stored values to None
         """
         del self._elements[:]
         del self.trig_waits[:]
@@ -95,6 +96,10 @@ class Sequence:
         self.variable = None
         self.variable_unit = None
         self.variable_array = None
+
+    def unwrap_4dsp(self):
+        for i, elem in enumerate(self._elements):
+            elem.unwrap_4dsp(i)
 
     def unwrap(self):
         """
