@@ -82,7 +82,8 @@ class Sequence:
 
     def clear(self):
         """
-        Functions which deletes contents of elements and variables lists sets stored values to None
+        Functions which deletes contents of elements and variables lists
+        sets stored values to None
         """
         del self._elements[:]
         del self.trig_waits[:]
@@ -93,6 +94,10 @@ class Sequence:
         self.variable = None
         self.variable_unit = None
         self.variable_array = None
+
+    def unwrap_4dsp(self):
+        for i, elem in enumerate(self._elements):
+            elem.unwrap_4dsp(i)
 
     def unwrap(self):
         """
@@ -160,13 +165,20 @@ class Sequence:
 
         elem_length = len(wf_lists[0])
         chan_length = len(chan_list)
-        if any(len(lst) != elem_length for lst in [m1_lists[0], m2_lists[0], nrep_list, trig_wait_list, goto_state_list, jump_to_list]):
-            raise ValueError('Cannot form Sequence: not all from (wf_lists, m1_lists, m2_lists, nrep_list,'
-         'trig_wait_list, goto_state_list, jump_to_list, chan_list) have same '
-         'length (corresponding to element number)')
-        elif any(len(lst) != chan_length for lst in [wf_lists, m1_lists, m2_lists]):
-            raise ValueError('Not all from Cannot from  (chan_list, wf_lists, m1_lists, m2_lists) provided for Sequence building have same '
-         'length (corresponding to number of channels used)')
+        if any(len(lst) != elem_length for lst in [m1_lists[0], m2_lists[0],
+                                                   nrep_list, trig_wait_list,
+                                                   goto_state_list,
+                                                   jump_to_list]):
+            raise ValueError('Cannot form Sequence: not all from (wf_lists, '
+                             'm1_lists, m2_lists, nrep_list, trig_wait_list, '
+                             'goto_state_list, jump_to_list, chan_list) have '
+                             'same length (corresponding to element number)')
+        elif any(len(lst) != chan_length for lst in [wf_lists, m1_lists,
+                                                     m2_lists]):
+            raise ValueError('Not all from Cannot from  (chan_list, wf_lists, '
+                             'm1_lists, m2_lists) provided for Sequence '
+                             'building have same length (corresponding to '
+                             'number of channels used)')
 
         self.clear()
 
