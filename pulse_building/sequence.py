@@ -52,8 +52,6 @@ class Sequence:
         elif all(isinstance(i, (float, int)) for i in [start, stop, step]):
             self.set_variable_array(start, stop, step)
         else:
-            for i in [start, stop, step]:
-                print(type(i))
             raise TypeError('start, stop and step must either all be '
                             'set as numbers (floats or ints) or none set')
 
@@ -216,7 +214,7 @@ class Sequence:
             - stop (float)
             - step (float)
         """
-        number = int((stop - start) / step + 1)
+        number = round(abs(stop - start) / step + 1)
         self.variable_array = np.linspace(start, stop, num=number)
 
     def add_element(self, element):
