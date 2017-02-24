@@ -1,4 +1,5 @@
 import copy
+from shutil import copyfile
 from . import Waveform
 
 # TODO: test 'check' behaviour
@@ -99,6 +100,9 @@ class Element:
 
         # close the file
         f.close()
+
+        for i in range(1, 6):
+            copyfile(folder + 'waveform_0.txt', folder + 'waveform_{}.txt'.format(i))
 
     def copy(self):
         return copy.copy(self)
