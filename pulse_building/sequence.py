@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import os
 from . import Element
 
 # TODO: test 'check' behaviour
@@ -97,10 +98,6 @@ class Sequence:
         self.variable_unit = None
         self.variable_array = None
 
-    def unwrap_4dsp(self):
-        for i, elem in enumerate(self._elements):
-            elem.unwrap_4dsp(i)
-
     def unwrap(self):
         """
         Function which unwraps the sequence into a tuple of lists which
@@ -147,6 +144,14 @@ class Sequence:
             jump_to_list = self.jump_tos
         return (wf_lists, m1_lists, m2_lists, nrep_list,
                 trig_wait_list, goto_state_list, jump_to_list, chan_list)
+
+    def unwrap_seq_4dsp(self, file_path=''):
+        for i, element in enumerate(self._elements):
+            element_path = (file_path +
+                            'data/waveform00000/element{0:0=4d}/'.format(i))
+            if not os.path.exists(element_path):
+                os.makedirs(element_path)
+            element.unwrap_4dsp(element_path)
 
     def wrap(self, tup):
         """

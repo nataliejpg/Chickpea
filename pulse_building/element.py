@@ -73,8 +73,8 @@ class Element:
                     'error in waveform {}: {}'.format(i, e))
         return True
 
-    def unwrap_4dsp(self, elemnum):
-        f = open('waveform_' + str(elemnum) + '.txt', 'w')
+    def unwrap_4dsp(self, folder):
+        f = open(folder + 'waveform_0.txt', 'w')
         c_16B2CMAX = 32767
         l_wave = list(self.values())[0].length
         l_chans = len(list(self.keys())) * 3
