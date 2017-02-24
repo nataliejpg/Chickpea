@@ -96,7 +96,6 @@ class Element:
                 f.write(str(int(self._waveforms[ch].marker_2[s] * c_16B2CMAX)) + '\n')
             for i in range(8 - l_chans):
                 f.write('0\n')
-            f.write('\n')
 
         # close the file
         f.close()
