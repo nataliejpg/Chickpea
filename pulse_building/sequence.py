@@ -146,7 +146,7 @@ class Sequence:
     def unwrap_seq_4dsp(self, file_path=''):
         for i, element in enumerate(self._elements):
             element_path = (file_path +
-                            'data/waveform00000/element{0:0=4d}/'.format(i))
+                            'data/waveform00000/element{0:0=5d}/'.format(i))
             if not os.path.exists(element_path):
                 os.makedirs(element_path)
             element.unwrap_4dsp(element_path)
