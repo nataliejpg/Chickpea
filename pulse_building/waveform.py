@@ -54,9 +54,9 @@ class Waveform:
         if self._wave is None:
             unset.append('wave')
         if self._marker_1 is None:
-            unset.append('marker1')
+            unset.append('marker_1')
         if self._marker_2 is None:
-            unset.append('marker2')
+            unset.append('marker_2')
         if len(unset) > 0:
             raise Exception(
                 'must specify non None array for {}'.format(", ".join(unset)))
@@ -114,8 +114,8 @@ class Waveform:
             # elif self._length != len(wave_array):
             #     print('new wave array is of different length to old, '
             #           'clearing markers')
-            self._marker1.clear()
-            self._marker2.clear()
+            self._marker_1.clear()
+            self._marker_2.clear()
         self._wave = wave_array
 
     wave = property(_get_wave, _set_wave)
@@ -129,8 +129,8 @@ class Waveform:
         """
         if (self._wave is None) and not self.segment_list:
             raise Exception('wave must be set for marker to be gettable')
-        if self._marker1:
-            return self._marker1
+        if (self._marker_1 is not None) and len(self._marker_1) > 0:
+            return self._marker_1
             marker = np.zeros(self._length)
 
         if self.from_segments:
@@ -141,7 +141,7 @@ class Waveform:
                     duration = seg.markers[1]['durations'][i]
                     marker[(start_index + delay): (duration + delay)] = 1
         else:
-            marker = self._marker1
+            marker = self._marker_1
         return marker
 
     def _set_marker_1(self, marker_1_array):
