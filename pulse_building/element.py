@@ -61,7 +61,7 @@ class Element:
         """
         if not self._waveforms:
             raise Exception('no waveforms in element')
-        lengths = [w.length for w in self._waveforms.values()]
+        lengths = [len(w) for w in self._waveforms.values()]
         if lengths.count(lengths[0]) != len(lengths):
             raise Exception(
                 'the waveforms of this element are '
@@ -77,7 +77,7 @@ class Element:
     def unwrap_4dsp(self, folder):
         f = open(folder + 'waveform_0.txt', 'w')
         c_16B2CMAX = 32767
-        l_wave = list(self.values())[0].length
+        l_wave = len(list(self.values())[0])
         l_chans = len(list(self.keys())) * 3
         chans = list(self.keys())
         chans.sort()

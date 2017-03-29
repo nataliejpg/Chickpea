@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Waveform:
-    def __init__(self, length=None, channel=None, segment_list=[]):
+    def __init__(self, length=None, channel=None, segment_list=None):
         """
         Waveform class which represents the wave and markers
         (as numpy arrays) for one channel
@@ -30,8 +30,8 @@ class Waveform:
         else:
             # self._length = None
             self._wave = None
-            self._marker_1 = []
-            self._marker_2 = []
+            self._marker_1 = None
+            self._marker_2 = None
 
         self._segment_list = segment_list
 
@@ -51,11 +51,11 @@ class Waveform:
         it should b impossible to make them otherwise
         """
         unset = []
-        if self._wave is None:
+        if self.wave is None:
             unset.append('wave')
-        if self._marker_1 is None:
+        if self.marker_1 is None:
             unset.append('marker_1')
-        if self._marker_2 is None:
+        if self.marker_2 is None:
             unset.append('marker_2')
         if len(unset) > 0:
             raise Exception(
@@ -78,11 +78,10 @@ class Waveform:
 
     channel = property(_get_channel, _set_channel)
 
-
-
     def __len__(self):
-        self._length = len(self.wave)
-        return(self._length)
+        if self.wave is None:
+            raise Exception('wave is None, cannot get length')
+        return(len(self.wave))
 
     def _get_wave(self):
         """
@@ -91,7 +90,7 @@ class Waveform:
         Returns:
             wave (numpy array)
         """
-        if self._segment_list:
+        if self._segment_list is not None:
             return np.concatenate([s.points for s in self._segment_list])
         else:
             return self._wave
@@ -107,15 +106,14 @@ class Waveform:
             raise TypeError('wave must be numpy array')
         self._segment_list.clear()
 
-        if ((self.marker_1 or self.marker_2) and
-                len(wave_array) != len(self._wave)):
+        if len(wave_array) != len(self._wave):
             # if not self._length:
             #     self._length = len(wave_array)
             # elif self._length != len(wave_array):
             #     print('new wave array is of different length to old, '
             #           'clearing markers')
-            self._marker_1.clear()
-            self._marker_2.clear()
+            self._marker_1 = np.zeros(len(wave_array))
+            self._marker_2 = np.zeros(len(wave_array))
         self._wave = wave_array
 
     wave = property(_get_wave, _set_wave)
@@ -127,15 +125,15 @@ class Waveform:
         Returns:
             marker_1 (list)
         """
-        if (self._wave is None) and not self.segment_list:
-            raise Exception('wave must be set for marker to be gettable')
-        if (self._marker_1 is not None) and len(self._marker_1) > 0:
-            return self._marker_1
-            marker = np.zeros(self._length)
+        # if (self._wave is None) and not self.segment_list:
+        #     raise Exception('wave must be set for marker to be gettable')
+        # if self._marker_1 is not None:
+        #     return self._marker_1
+        marker = np.zeros(len(self))
 
-        if self.from_segments:
+        if self._segment_list is not None:
             start_index = 0
-            for seg in self.segment_list:
+            for seg in self._segment_list:
                 start_index += len(seg)
                 for i, delay in enumerate(seg.markers[1]['delays']):
                     duration = seg.markers[1]['durations'][i]
@@ -145,9 +143,9 @@ class Waveform:
         return marker
 
     def _set_marker_1(self, marker_1_array):
-        if not self._length:
-            self._length = len(marker_1_array)
-        elif self._length != len(marker_1_array):
+        if self.wave is None:
+            raise Exception('cannot set marker before setting wave')
+        elif len(self.wave) != len(marker_1_array):
             raise Exception('trying to set marker_1 of unexpected length')
         elif not isinstance(marker_1_array, np.ndarray):
             raise Exception('marker_1 must be numpy array')
@@ -162,12 +160,22 @@ class Waveform:
         Get or set the marker_1 of the waveform
         - marker_1 (numpy array)
         """
-        return self._marker_2
+        marker = np.zeros(len(self))
+        if self._segment_list is not None:
+            start_index = 0
+            for seg in self._segment_list:
+                start_index += len(seg)
+                for i, delay in enumerate(seg.markers[2]['delays']):
+                    duration = seg.markers[2]['durations'][i]
+                    marker[(start_index + delay): (duration + delay)] = 1
+        else:
+            marker = self._marker_2
+        return marker
 
     def _set_marker_2(self, marker_2_array):
-        if not self._length:
-            self._length = len(marker_2_array)
-        elif self._length != len(marker_2_array):
+        if self.wave is None:
+            raise Exception('cannot set marker before setting wave')
+        if len(self.wave) != len(marker_2_array):
             raise Exception('trying to set marker_2 of unexpected length')
         elif not isinstance(marker_2_array, np.ndarray):
             raise Exception('marker_2 must be numpy array')
@@ -180,10 +188,9 @@ class Waveform:
     def add_segment(self, segment):
         """
         """
-        if self.from_segments or self._wave:
-            self.from_segments = True
+        if self._wave is None:
             self._segment_list.append(segment)
         else:
             np.append(self._wave, segment.points)
             np.append(self._marker_1, np.zeros(len(segment)))
-            np.append(self._marker_1, np.zeros(len(segment)))
+            np.append(self._marker_2, np.zeros(len(segment)))
