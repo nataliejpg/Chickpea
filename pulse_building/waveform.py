@@ -104,14 +104,9 @@ class Waveform:
         """
         if not isinstance(wave_array, np.ndarray):
             raise TypeError('wave must be numpy array')
-        self._segment_list.clear()
+        self._segment_list = None
 
-        if len(wave_array) != len(self._wave):
-            # if not self._length:
-            #     self._length = len(wave_array)
-            # elif self._length != len(wave_array):
-            #     print('new wave array is of different length to old, '
-            #           'clearing markers')
+        if (self._wave is None) or (len(wave_array) != len(self._wave)):
             self._marker_1 = np.zeros(len(wave_array))
             self._marker_2 = np.zeros(len(wave_array))
         self._wave = wave_array
@@ -194,3 +189,12 @@ class Waveform:
             np.append(self._wave, segment.points)
             np.append(self._marker_1, np.zeros(len(segment)))
             np.append(self._marker_2, np.zeros(len(segment)))
+
+    def copy(self):
+        new_waveform = Waveform(channel = self.channel, segment_list = self._segment_list)
+        if self._segment_list is None:
+            new_waveform.wave = self.wave
+            new_waveform.marker_1 = self.marker_1
+            new_waveform.marker_2 = self.marker_2
+        return new_waveform
+

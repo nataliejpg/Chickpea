@@ -10,7 +10,7 @@ from . import Element
 
 
 class Sequence:
-    def __init__(self, name=None, variable=None, variable_unit=None,
+    def __init__(self, name=None, variable=None, variable_label=None, variable_unit=None,
                  start=None, stop=None, step=None, nreps=1, trig_waits=0,
                  goto_states=0, jump_tos=1):
         """
@@ -46,6 +46,7 @@ class Sequence:
         self.jump_tos = jump_tos
         self.name = name
         self.variable = variable
+        self.variable_label = variable_label or variable
         self.variable_unit = variable_unit
         if all(not i for i in [start, stop, step]):
             self.variable_array = None
