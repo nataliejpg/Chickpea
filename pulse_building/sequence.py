@@ -6,13 +6,12 @@ from . import Element
 # TODO: test 'check' behaviour
 # TODO: write tests
 # TODO: make _test_sequence_variables test that variable values are valid
-# TODO: decide whether to limit setattr behaviour, code at bottom
 
 
 class Sequence:
-    def __init__(self, name=None, variable=None, variable_label=None, variable_unit=None,
-                 start=None, stop=None, step=None, nreps=1, trig_waits=0,
-                 goto_states=0, jump_tos=1):
+    def __init__(self, name=None, variable=None, variable_label=None,
+                 variable_unit=None, start=None, stop=None, step=None,
+                 nreps=1, trig_waits=0, goto_states=0, jump_tos=1, labels={}):
         """
         Sequence class which represents a list of elements to run in order on
         an AWG with optional metadata information.
@@ -48,6 +47,7 @@ class Sequence:
         self.variable = variable
         self.variable_label = variable_label or variable
         self.variable_unit = variable_unit
+        self.labels = labels
         if all(not i for i in [start, stop, step]):
             self.variable_array = None
         elif all(isinstance(i, (float, int)) for i in [start, stop, step]):
