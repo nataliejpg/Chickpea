@@ -1,14 +1,14 @@
 import numpy as np
 
-# TODO: right exceptions
+# TODO: exceptions
 # TODO: cut name?
 # TODO: unbound and bound markers coexisting happily?
 
 
 class Segment:
-    def __init__(self, name=None, gen_func=None, func_args={},
-                 sample_rate=None, points_array=None, points_markers={},
-                 time_markers={}, raw_markers={}):
+    def __init__(self, name=None, gen_func=None, func_args=None,
+                 sample_rate=None, points_array=None, points_markers=None,
+                 time_markers=None, raw_markers=None):
         """
         Segment class which represents a segment of a wave and markers
         for one channel of the AWG at one point in time. These can be in
@@ -31,13 +31,14 @@ class Segment:
                 form {1: {'delay_points': [], 'duration_points': []}, 2: ...}
                 (ie values in points rather than time)
             time_markers (dict): optional dictionary of bound markers
-                of the form {1: {'delays': [], 'durations': []}, 2: ...}
+                of the form
+                {1: {'delay_time': [], 'duration_time': []}, 2: ...}
             raw_markers (dict): optional dictionary of form {1: [], 2: []]}
                 where the length of the marker lists must be 0 or the same as
                 the specified points_array
         """
 
-        # Checks if there is a points array specified or a function specified
+        # Check if there is a points array specified or a function specified
         # and takes the function name for naming the segment
         if points_array is not None:
             if gen_func is not None:
@@ -49,62 +50,78 @@ class Segment:
             if (gen_func is not None) and (name is None):
                 name = gen_func.__name__
 
-        # Checks marker dictionaties have valid keys, that if a marker is
+        # Check marker dictionaties have valid keys, that if a marker is
         # specified it is not duplicated across dictionaries and that any
         # raw markers  are of the same length as the specified points array.
-        if not all([k in [1, 2] for k in points_markers.keys()]):
-            raise Exception('points_markers dict must have keys in [1, 2]'
-                            ' {} received'.format(points_markers.keys()))
-        if not all([k in [1, 2] for k in time_markers.keys()]):
-            raise Exception('time_markers dict must have keys in [1, 2]'
-                            ' {} received'.format(time_markers.keys()))
-        if not all([k in [1, 2] for k in raw_markers.keys()]):
-            raise Exception('raw_markers dict must have keys in [1, 2]'
-                            ' {} received'.format(raw_markers.keys()))
+        if time_markers is None:
+            time_markers = {}
+            time_marker_nums = []
+        else:
+            time_marker_nums = time_markers.keys()
+            if not all([k in [1, 2] for k in time_markers.keys()]):
+                raise Exception('time_markers dict must have keys in [1, 2]'
+                                ' {} received'.format(time_markers.keys()))
+            for m in time_marker_nums:
+                if not all([k in time_markers[m].keys()
+                            for k in ['delay_time', 'duration_time']]):
+                    raise Exception('time_markers[{}] must have keys '
+                                    '[\'delay_time\', \'duration_time\'], '
+                                    'received: {}'.format(
+                                        m, time_markers[m].keys()))
 
-        time_markers_nums = list(time_markers.keys())
-        points_marker_nums = list(points_markers.keys())
-        raw_marker_nums = list(raw_markers.keys())
-        overlap = set.intersection(time_markers_nums,
-                                   points_marker_nums,
-                                   raw_marker_nums)
+        if points_markers is None:
+            points_markers = {}
+            points_marker_nums = []
+        else:
+            points_marker_nums = points_markers.keys()
+            if not all([k in [1, 2] for k in points_markers.keys()]):
+                raise Exception('points_markers dict must have keys in [1, 2]'
+                                ' {} received'.format(points_markers.keys()))
+            for m in points_marker_nums:
+                if not all([k in points_markers[m].keys()
+                            for k in ['delay_points', 'duration_points']]):
+                    raise Exception('points_markers[{}] must have keys '
+                                    '[\'delay_points\', '
+                                    '\'duration_points\'], received'
+                                    ': {}'.format(m,
+                                                  points_markers[m].keys()))
+
+        if raw_markers is None:
+            raw_markers = {}
+            raw_marker_nums = []
+        else:
+            raw_marker_nums = raw_markers.keys()
+            if not all([k in [1, 2] for k in raw_markers.keys()]):
+                raise Exception('raw_markers dict must have keys in [1, 2]'
+                                ' {} received'.format(raw_markers.keys()))
+            for m in raw_marker_nums:
+                if not isinstance(raw_markers[m], (list, np.ndarray)):
+                    raise TypeError('raw_markers[{}] must be a list or numpy '
+                                    'array'.format(m))
+                elif points_array is None:
+                    raise Exception('must set points_array to set raw_markers')
+                elif len(raw_markers[m]) != len(points_array):
+                    raise Exception('raw_markers[{}] length {} not equal to '
+                                    'points_array length {}'.format(
+                                        m,
+                                        len(raw_markers[m]),
+                                        len(points_array)))
+            points_markers.update(self._raw_to_points(raw_markers))
+
+        overlap = set.intersection(set(time_marker_nums),
+                                   set(points_marker_nums),
+                                   set(raw_marker_nums))
         if overlap:
             raise Exception('you have tried to set a value for marker(s) {} '
                             'in more than one of the dictionaries: '
                             'time_markers, points_markers,'
                             ' raw_markers'.format(overlap))
-        for m in time_markers_nums:
-            if not list(time_markers[m].keys()) is ['delays', 'durations']:
-                raise Exception('time_markers[{}] must have keys '
-                                '[\'delays\', \'durations\'], received'
-                                ': {}'.format(m, time_markers[m].keys()))
-        for m in points_marker_nums:
-            if (not list(points_markers[m].keys())
-                    is ['delay_points', 'duration_points']):
-                raise Exception('points_markers[{}] must have keys '
-                                '[\'delay_points\', '
-                                '\'duration_points\'], received'
-                                ': {}'.format(m,
-                                              points_markers[m].keys()))
-        for m in raw_marker_nums:
-            if not isinstance(raw_markers[m], (list, np.ndarray)):
-                raise TypeError('raw_markers[{}] must be a list or numpy '
-                                'array'.format(m))
-            elif points_array is None:
-                raise Exception('must set points_array to set raw_markers')
-            elif len(raw_markers[m]) != len(points_array):
-                raise Exception('raw_markers[{}] length {} not equal to '
-                                'points_array length {}'.format(
-                                    m,
-                                    len(raw_markers[m]),
-                                    len(points_array)))
-            points_markers.update(self.raw_to_points(raw_markers))
 
         self.name = name
         self.sample_rate = sample_rate
         self.func = gen_func
         self.func_args = func_args
-        self._points = np.array(points_array)
+        self._points = points_array
         self._points_markers = points_markers
         self._time_markers = time_markers
 
@@ -113,6 +130,9 @@ class Segment:
 
     def __len__(self):
         return len(self.points)
+
+    def __repr__(self):
+        return self.name
 
     def __add__(self, other):
         """
@@ -141,32 +161,39 @@ class Segment:
 
         new_name = self.name + '_' + other.name
 
-        # If both sample rates not set: set the new sample rate
-        # to be the non None sample rate or None if both are None
-        if all([self.sample_rate, other.sample_rate]):
-            new_sample_rate = self.sample_rate or other.sample_rate
-        # If both sample rates are set: check they are the same
-        elif self.sample_rate != other.sample_rate:
-            raise Exception('sample rates of segments do not match')
-        else:
-            new_sample_rate = self.sample_rate
+        # If both sample rates were set this checks that they were the same
+        if ((self.sample_rate != other.sample_rate) or
+                (self.sample_rate is None)):
+            raise Exception('Both sample rates must be set and the same, '
+                            'received sample rates: {}, {}.'.format(
+                                self.sample_rate,
+                                other.sample_rate))
 
         new_points = np.concatenate([self.points, other.points])
 
-        new_markers = {1: {}, 2: {}}
+        new_markers = {1: {'delay_points': [], 'duration_points': []},
+                       2: {'delay_points': [], 'duration_points': []}}
+
+        if self._time_markers or other._time_markers:
+            print('warning: time markers will be converted to point '
+                  'markers so changes in sample rate will do '
+                  'bad things')
 
         for m in [1, 2]:
-            new_marker_delays = np.append(
-                self.markers[m]['delays'],
-                other.markers[m]['delays'] + len(self))
-            new_marker_durations = np.append(
-                self.markers[m]['durations'],
-                other.markers[m]['durations'])
-            new_markers[m]['delays'] = new_marker_delays
-            new_markers[m]['durations'] = new_marker_durations
+            new_markers[m]['delay_points'].extend(
+                self.markers[m]['delay_points'])
+            for delay_point in other.markers[m]['delay_points']:
+                new_markers[m]['delay_points'].append(
+                    delay_point + len(self))
+            new_markers[m]['duration_points'].extend(
+                self.markers[m]['duration_points'])
+            for duration_point in other.markers[m]['duration_points']:
+                new_markers[m]['duration_points'].append(
+                    duration_point)
 
-        return Segment(name=new_name, sample_rate=new_sample_rate,
-                       points_array=new_points, points_markers=new_markers)
+        return Segment(name=new_name, sample_rate=self.sample_rate,
+                       points_array=new_points,
+                       points_markers=new_markers.copy())
 
     def _set_points(self, points_array):
         """
@@ -232,42 +259,37 @@ class Segment:
                 {1: {'delay_points': [], 'duration_points': []},
                  2: {'delay_points': [], 'duration_points': []}}
         """
-        markers_dict = self._points_markers
+        markers_dict = self._points_markers.copy()
         if self._time_markers:
             if self.sample_rate is None:
-                raise Exception('sample rate not set so bound segment'
+                raise Exception('sample rate not set so bound '
                                 'markers specified in time '
-                                'cannot be calculated')
-            markers_dict.update(self.time_to_points(self._time_markers,
-                                                    self.sample_rate))
+                                'cannot be calculated in points')
+            markers_dict.update(self._time_to_points(self._time_markers,
+                                                     self.sample_rate))
+        for i in [1, 2]:
+            if i not in markers_dict.keys():
+                markers_dict[i] = {'delay_points': [], 'duration_points': []}
         return markers_dict
 
     markers = property(fget=_get_markers)
 
-    def add_bound_markers(self, marker_num, delay_duration_list, time=False):
+    def add_bound_markers(self, marker_num, delay, duration, time=False):
         """
         Function which adds a bound marker to a segment by updating the
         relevant marker dictionary with delay and duration values.
 
         Args:
             marker_num (1 or 2): marker to add to
-            delay_duration_list (list or numpy array): list of delay-duration
-                pairs specifying the start and duration that the marker should
-                be 'on' for
+            delay (float): point number (or time) of delay before marker starts
+            duration (float): point number (or time) for which marker is on
             time (bool): whether or not values are in real time or in number
                 of points(default False)
         """
+
         if not (marker_num in [1, 2]):
             raise Exception('marker_num be in [1, 2]: '
                             'received {}'.format(marker_num))
-        if not isinstance(delay_duration_list, (list, np.ndarray)):
-            raise AttributeError('delay_duration_list must be a'
-                                 ' list or numpy array')
-        delay_duration_array = np.array(delay_duration_list)
-        if not (delay_duration_array.shape[1] == 2):
-            raise AttributeError('delay_duration_list must have shape (n, 2)'
-                                 'so that delay from segment start and '
-                                 'duration is set for each')
 
         if time:
             try:
@@ -275,19 +297,12 @@ class Segment:
             except KeyError:
                 pass
             try:
-                old_delay_vals = self._time_markers[marker_num]['delays']
-                old_duration_vals = self._time_markers[marker_num]['durations']
+                self._time_markers[marker_num]['delay_time'].append(delay)
+                self._time_markers[marker_num][
+                    'duration_time'].append(duration)
             except KeyError:
-                old_delay_vals = []
-                old_duration_vals = []
-                self._points_markers[marker_num] = {}
-            new_delay_vals = np.append(old_delay_vals,
-                                       delay_duration_array[:, 0])
-            new_duration_vals = np.append(old_duration_vals,
-                                          delay_duration_array[:, 1])
-
-            self._time_markers[marker_num]['delays'] = new_delay_vals
-            self._time_markers[marker_num]['durations'] = new_duration_vals
+                self._time_markers[marker_num] = {'delay_time': [delay],
+                                                  'duration_time': [duration]}
 
         else:
             try:
@@ -295,22 +310,12 @@ class Segment:
             except KeyError:
                 pass
             try:
-                old_delay_vals = self._points_markers[
-                    marker_num]['delay_points']
-                old_duration_vals = self._points_markers[
-                    marker_num]['delay_points']
+                self._points_markers[marker_num]['delay_points'].append(delay)
+                self._points_markers[marker_num][
+                    'duration_points'].append(duration)
             except KeyError:
-                old_delay_vals = []
-                old_duration_vals = []
-                self._points_markers[marker_num] = {}
-            new_delay_vals = np.append(old_delay_vals,
-                                       delay_duration_array[:, 0])
-            new_duration_vals = np.append(old_duration_vals,
-                                          delay_duration_array[:, 1])
-
-            self._points_markers[marker_num]['delay_points'] = new_delay_vals
-            self._points_markers[marker_num][
-                'duration_points'] = new_duration_vals
+                self._points_markers[marker_num] = {'delay_time': [delay],
+                                                    'duration_time': [duration]}
 
     def add_raw_marker(self, marker_num, marker_array):
         """
@@ -327,21 +332,22 @@ class Segment:
                             'received {}'.format(marker_num))
         elif not isinstance(marker_array, (list, np.ndarray)):
             raise TypeError('marker_array must be numpy array')
-        elif self._points_array is None:
+        elif self._points is None:
             raise Exception('must set points to set raw_markers')
-        elif len(marker_array) != len(self._points_array):
+        elif len(marker_array) != len(self._points):
             raise Exception('marker_array length {} not equal to '
                             'points_array length {}'.format(
                                 len(marker_array),
-                                len(self._points_array)))
+                                len(self._points)))
         elif any(int(v) not in [0, 1] for v in marker_array):
-            raise AttributeError('marker values not in (0, 1)')
+            raise AttributeError('marker values not in [0, 1]')
         try:
             del self._time_markers[marker_num]
         except KeyError:
             pass
+
         raw_marker = {marker_num: np.array(marker_array)}
-        self._points_markers.update(self.raw_to_points(raw_marker))
+        self._points_markers.update(self._raw_to_points(raw_marker))
 
     def clear_markers(self):
         """
@@ -351,20 +357,22 @@ class Segment:
         self._time_markers.clear()
 
     @staticmethod
-    def raw_to_points(raw_markers):
+    def _raw_to_points(raw_markers):
         """
         Function which converts a dictionary of raw marker arrays into
         a dictionary of markers specified in duration and delay of marker
         'on' state
 
         Args:
-            raw_markers (dict) of the form {1: [], 2: []]}
+            raw_marker (dict) of the form {1: [], 2: []}
 
         Returns:
-            points_markers (dict) of ther form
+            points_markers (dict) of the form
+                {1: {'delay_points': [], 'duration_points'}...
         """
         points_markers = {}
         for m in np.array(raw_markers):
+            points_markers[m] = {}
             nonzero_indices = np.nonzero(raw_markers[m])[0]
             starts = np.array([s for s in nonzero_indices
                                if raw_markers[m][s - 1] != 1])
@@ -377,14 +385,14 @@ class Segment:
         return points_markers
 
     @staticmethod
-    def time_to_points(time_markers, sample_rate):
+    def _time_to_points(time_markers, sample_rate):
         """
         Function which converts a dictionary of marker delays and durations
         in time into one specified in points
 
         Args:
             time_markers (dict) of the form
-                {1: {'delays': [], 'durations': []}, 2: ...}
+                {1: {'delay_time': [], 'duration_time': []}, 2: ...}
             sample_rate (float): points per second value
 
         Returns:
@@ -393,10 +401,11 @@ class Segment:
         """
         points_markers = {}
         for m in time_markers:
-            marker_delays = (time_markers[m][:, 0] *
-                             sample_rate)
-            marker_durations = (time_markers[m][:, 1] *
-                                sample_rate)
+            points_markers[m] = {}
+            marker_delays = [d * sample_rate
+                             for d in time_markers[m]['delay_time']]
+            marker_durations = [d * sample_rate
+                                for d in time_markers[m]['duration_time']]
             points_markers[m]['delay_points'] = marker_delays
             points_markers[m]['duration_points'] = marker_durations
         return points_markers

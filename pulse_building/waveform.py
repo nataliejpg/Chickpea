@@ -1,6 +1,8 @@
 import numpy as np
 
 # TODO: exception types
+# TODO: docstrings
+# TODO: sort out setting sample rate between segment and waveform
 
 
 class Waveform:
@@ -23,17 +25,16 @@ class Waveform:
         else:
             self._channel = None
         if length:
-            # self._length = int(length)
             self._wave = np.zeros(int(length))
             self._marker_1 = np.zeros(int(length))
             self._marker_2 = np.zeros(int(length))
         else:
-            # self._length = None
             self._wave = None
             self._marker_1 = None
             self._marker_2 = None
 
-        self._segment_list = segment_list
+        self.segment_list = segment_list
+
 
     # def clear(self):
     #     """
@@ -90,8 +91,8 @@ class Waveform:
         Returns:
             wave (numpy array)
         """
-        if self._segment_list is not None:
-            return np.concatenate([s.points for s in self._segment_list])
+        if self.segment_list is not None:
+            return np.concatenate([s.points for s in self.segment_list])
         else:
             return self._wave
 
@@ -104,7 +105,7 @@ class Waveform:
         """
         if not isinstance(wave_array, np.ndarray):
             raise TypeError('wave must be numpy array')
-        self._segment_list = None
+        self.segment_list = None
 
         if (self._wave is None) or (len(wave_array) != len(self._wave)):
             self._marker_1 = np.zeros(len(wave_array))
@@ -126,12 +127,12 @@ class Waveform:
         #     return self._marker_1
         marker = np.zeros(len(self))
 
-        if self._segment_list is not None:
+        if self.segment_list is not None:
             start_index = 0
-            for seg in self._segment_list:
+            for seg in self.segment_list:
                 start_index += len(seg)
-                for i, delay in enumerate(seg.markers[1]['delays']):
-                    duration = seg.markers[1]['durations'][i]
+                for i, delay in enumerate(seg.markers[1]['delay_points']):
+                    duration = seg.markers[1]['duration_points'][i]
                     marker[(start_index + delay): (duration + delay)] = 1
         else:
             marker = self._marker_1
@@ -156,12 +157,12 @@ class Waveform:
         - marker_1 (numpy array)
         """
         marker = np.zeros(len(self))
-        if self._segment_list is not None:
+        if self.segment_list is not None:
             start_index = 0
-            for seg in self._segment_list:
+            for seg in self.segment_list:
                 start_index += len(seg)
-                for i, delay in enumerate(seg.markers[2]['delays']):
-                    duration = seg.markers[2]['durations'][i]
+                for i, delay in enumerate(seg.markers[2]['delay_points']):
+                    duration = seg.markers[2]['duration_points'][i]
                     marker[(start_index + delay): (duration + delay)] = 1
         else:
             marker = self._marker_2
@@ -191,10 +192,10 @@ class Waveform:
             np.append(self._marker_2, np.zeros(len(segment)))
 
     def copy(self):
-        new_waveform = Waveform(channel = self.channel, segment_list = self._segment_list)
-        if self._segment_list is None:
+        new_waveform = Waveform(channel=self.channel,
+                                segment_list=self.segment_list)
+        if self.segment_list is None:
             new_waveform.wave = self.wave
             new_waveform.marker_1 = self.marker_1
             new_waveform.marker_2 = self.marker_2
         return new_waveform
-
