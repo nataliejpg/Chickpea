@@ -4,7 +4,9 @@ from . import Waveform
 
 # TODO: test 'check' behaviour
 # TODO: write tests
+# TODO: docstrings
 # TODO: decide whether to limit setattr behaviour, code in waveform
+# TODO: add limits check for duration
 
 
 class Element:
@@ -18,6 +20,7 @@ class Element:
         """
 
         self._waveforms = {}
+        self._sample_rate = None
 
     def __getitem__(self, key):
         return self._waveforms[key]
@@ -39,6 +42,25 @@ class Element:
     def __delitem__(self, key):
         del self._waveforms[key]
 
+    def _set_sample_rate(self, val):
+        if self._waveforms is not None:
+            for w in self._waveforms.values():
+                w.sample_rate = val
+        self._sample_rate = val
+
+    def _get_sample_rate(self):
+        return self._sample_rate
+
+    sample_rate = property(fget=_get_sample_rate, fset=_set_sample_rate)
+
+    def _get_duration(self):
+        if self._sample_rate is None:
+            raise Exception('Cannot get duration as sample_rate is None')
+        else:
+            return next(iter(self._waveforms.values())).duration
+
+    duration = property(fget=_get_duration)
+
     def clear(self):
         """
         Function which empties dictionary
@@ -51,6 +73,15 @@ class Element:
         """
         if not isinstance(waveform, Waveform):
             raise TypeError('cannot add waveform not of type Waveform')
+        if self._sample_rate is not None:
+            if waveform.sample_rate is None:
+                waveform.sample_rate = self._sample_rate
+            elif waveform.sample_rate != self.sample_rate:
+                raise ValueError('Cannot add a waveform with a different'
+                                 'sample rate to that of the element. '
+                                 'element SR: {}, waveform SR: {}'.format(
+                                     self._sample_rate, waveform.sample_rate))
+
         self[waveform.channel] = waveform
 
     def check(self):
@@ -74,38 +105,38 @@ class Element:
                     'error in waveform {}: {}'.format(i, e))
         return True
 
-    def unwrap_4dsp(self, folder):
-        f = open(folder + 'waveform_0.txt', 'w')
-        c_16B2CMAX = 32767
-        l_wave = len(list(self.values())[0])
-        l_chans = len(list(self.keys())) * 3
-        chans = list(self.keys())
-        chans.sort()
-        if l_chans > 6:
-            raise ValueError('num of chans needed for waveforms'
-                             ' plus markers not 6')
+    # def unwrap_4dsp(self, folder):
+    #     f = open(folder + 'waveform_0.txt', 'w')
+    #     c_16B2CMAX = 32767
+    #     l_wave = len(list(self.values())[0])
+    #     l_chans = len(list(self.keys())) * 3
+    #     chans = list(self.keys())
+    #     chans.sort()
+    #     if l_chans > 6:
+    #         raise ValueError('num of chans needed for waveforms'
+    #                          ' plus markers not 6')
 
-        # write the sizes to the file
-        for ch in range(8):
-            f.write(str(l_wave) + '\n')
+    #     # write the sizes to the file
+    #     for ch in range(8):
+    #         f.write(str(l_wave) + '\n')
 
-        # compute the waveform samples and write them to the file
-        for s in range(l_wave):
-            for ch in chans:
-                f.write(str(int(self._waveforms[ch].wave[s] * c_16B2CMAX)) + '\n')
-                f.write(str(int(self._waveforms[ch].marker_1[s] * c_16B2CMAX)) + '\n')
-                f.write(str(int(self._waveforms[ch].marker_2[s] * c_16B2CMAX)) + '\n')
-            for i in range(8 - l_chans):
-                f.write('0\n')
+    #     # compute the waveform samples and write them to the file
+    #     for s in range(l_wave):
+    #         for ch in chans:
+    #             f.write(str(int(self._waveforms[ch].wave[s] * c_16B2CMAX)) + '\n')
+    #             f.write(str(int(self._waveforms[ch].marker_1[s] * c_16B2CMAX)) + '\n')
+    #             f.write(str(int(self._waveforms[ch].marker_2[s] * c_16B2CMAX)) + '\n')
+    #         for i in range(8 - l_chans):
+    #             f.write('0\n')
 
-        # close the file
-        f.close()
+    #     # close the file
+    #     f.close()
 
-        for i in range(1, 6):
-            copyfile(folder + 'waveform_0.txt', folder + 'waveform_{}.txt'.format(i))
+    #     for i in range(1, 6):
+    #         copyfile(folder + 'waveform_0.txt', folder + 'waveform_{}.txt'.format(i))
 
     def copy(self):
-        return copy.copy(self)
+        return copy.deepcopy(self)
 
     def has_key(self, k):
         return k in self._waveforms

@@ -264,7 +264,7 @@ class Sequence:
         return True
 
     def copy(self):
-        return copy.copy(self)
+        return copy.deepcopy(self)
 
     def has_key(self, k):
         return k in self._elements
