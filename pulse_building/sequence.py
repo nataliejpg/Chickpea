@@ -1,9 +1,11 @@
 import numpy as np
 import copy
 import os
+import matplotlib.pyplot as plt
 from . import Element
+from . import Waveform
 
-# TODO: test 'check' behaviour
+# TODO: write 'check' behaviour
 # TODO: write tests
 # TODO: make _test_sequence_variables test that variable values are valid
 
@@ -145,13 +147,13 @@ class Sequence:
         return (wf_lists, m1_lists, m2_lists, nrep_list,
                 trig_wait_list, goto_state_list, jump_to_list, chan_list)
 
-    def unwrap_seq_4dsp(self, file_path=''):
-        for i, element in enumerate(self._elements):
-            element_path = (file_path +
-                            'data/waveform00000/element{0:0=5d}/'.format(i))
-            if not os.path.exists(element_path):
-                os.makedirs(element_path)
-            element.unwrap_4dsp(element_path)
+    # def unwrap_seq_4dsp(self, file_path=''):
+    #     for i, element in enumerate(self._elements):
+    #         element_path = (file_path +
+    #                         'data/waveform00000/element{0:0=5d}/'.format(i))
+    #         if not os.path.exists(element_path):
+    #             os.makedirs(element_path)
+    #         element.unwrap_4dsp(element_path)
 
     def wrap(self, tup):
         """
@@ -240,27 +242,27 @@ class Sequence:
         chans = list(self._elements[element_index].keys())
         return chans
 
-    def check(self):
-        """
-        Function which checks the sequence, passing if:
-        1) sequence has nonzero length
-        2) if present variable array is the same length as sequence
-        3) nreps, trig_waits, goto_states are ints or lists
-           of the same length as the sequence
-        4) all elements have the same number of waveforms in
-        """
-        if not self._elements:
-            raise Exception('no elements in sequence')
-        self._test_variable_array_length()
-        self._test_sequence_variables()
-        self._test_element_waveform_numbers()
-        for i, element in enumerate(self._elements):
-            try:
-                element.check()
-            except Exception as e:
-                raise Exception(
-                    'error in element {}: {}'.format(i, e))
-        print('sequence check passed: {} elements'.format(len(self._elements)))
+    # def check(self):
+    #     """
+    #     Function which checks the sequence, passing if:
+    #     1) sequence has nonzero length
+    #     2) if present variable array is the same length as sequence
+    #     3) nreps, trig_waits, goto_states are ints or lists
+    #        of the same length as the sequence
+    #     4) all elements have the same number of waveforms in
+    #     """
+    #     if not self._elements:
+    #         raise Exception('no elements in sequence')
+    #     self._test_variable_array_length()
+    #     self._test_sequence_variables()
+    #     self._test_element_waveform_numbers()
+    #     for i, element in enumerate(self._elements):
+    #         try:
+    #             element.check()
+    #         except Exception as e:
+    #             raise Exception(
+    #                 'error in element {}: {}'.format(i, e))
+    #     print('sequence check passed: {} elements'.format(len(self._elements)))
         return True
 
     def copy(self):
@@ -275,54 +277,83 @@ class Sequence:
     def pop(self, *args):
         return self._elements.pop(*args)
 
-    def _test_variable_array_length(self):
+    def plot(self, elemnum=0, channels=[1, 2]):
         """
-        Test which raises an exception if there is a variable array set
-        that does not correspond to the length of the sequence
-        """
-        if (self.variable_array is not None and
-                len(self.variable_array) != len(self._elements)):
-            raise Exception('number of elements in sequence does not match '
-                            'length of "start, stop, step" variable_array')
+        Function which plots channels and markers
 
-    def _test_sequence_variables(self):
-        """
-        Test which checks the validity of nreps, trig_waits and goto_states
-        for use with the unwrap function to generate a sequence
-        """
-        if all(isinstance(i, int) for i in
-               [self.nreps, self.trig_waits, self.goto_states]):
-            return
-        elif not (isinstance(self.nreps, list) or
-                  len(self.nreps) != len(self._elements)):
-            raise Exception('nreps must be an int or a list of the same length'
-                            ' as the sequence')
-        elif not (isinstance(self.trig_waits, list) or
-                  len(self.trig_waits) != len(self._elements)):
-            raise Exception('trig_waits must be an int or a list of the same '
-                            'length as the sequence')
-        elif not (isinstance(self.goto_states, list) or
-                  len(self.goto_states) != len(self._elements)):
-            raise Exception('goto_states must be an int or a list of the same '
-                            'length as the sequence')
-        pass
+        Args:
+            sequence to plot
+            elemnum to plot (default 0)
+            channels (list of channel ints) (default [1, 2]) to plot
 
-    def _test_element_waveform_numbers(self):
-        lengths = [len(element) for element in self._elements]
-        # option1: all elements have same number of waveforms
-        option1 = lengths.count(lengths[0]) == len(self._elements)
-        # option2: first element has most waveforms and others have same number
-        if len(self._elements) > 1:
-            option2 = (all(i < lengths[0] for i in lengths[1:]) and
-                       (lengths.count(lengths[1]) == (len(lengths) - 1)))
-        else:
-            option2 = False
-        if not option1 or option2:
-            raise Exception(
-                'the elements of this sequence are '
-                'not of lengths [l, l, ...] or lengths'
-                ' [m, l, l, ...] where m > l : {}'.format(str(lengths)))
-        if option2:
-            raise NotImplementedError('awg upload doesn\'t support '
-                                      '  [m, l, l, ...] where m > l format:'
-                                      ' format given: {}'.format(str(lengths)))
+        Returns:
+            matplotlib fig
+        """
+        fig = plt.figure()
+        plt_count = len(channels)
+        for i, chan in enumerate(channels):
+            index = (plt_count * 100) + 10 + i + 1
+            ax = fig.add_subplot(index)
+            ax.set_title('Channel {}'.format(chan))
+            ax.set_ylim([-1.1, 1.1])
+            ax.plot(self[elemnum][chan].wave, lw=1,
+                    color='#009FFF', label='wave')
+            ax.plot(self[elemnum][chan].markers[1], lw=1,
+                    color='#008B45', alpha=0.6, label='m1')
+            ax.plot(self[elemnum][chan].markers[2], lw=1,
+                    color='#FE6447', alpha=0.6, label='m2')
+            ax.legend(loc='upper right', fontsize=10)
+        plt.tight_layout()
+        return fig
+
+    # def _test_variable_array_length(self):
+    #     """
+    #     Test which raises an exception if there is a variable array set
+    #     that does not correspond to the length of the sequence
+    #     """
+    #     if (self.variable_array is not None and
+    #             len(self.variable_array) != len(self._elements)):
+    #         raise Exception('number of elements in sequence does not match '
+    #                         'length of "start, stop, step" variable_array')
+
+    # def _test_sequence_variables(self):
+    #     """
+    #     Test which checks the validity of nreps, trig_waits and goto_states
+    #     for use with the unwrap function to generate a sequence
+    #     """
+    #     if all(isinstance(i, int) for i in
+    #            [self.nreps, self.trig_waits, self.goto_states]):
+    #         return
+    #     elif not (isinstance(self.nreps, list) or
+    #               len(self.nreps) != len(self._elements)):
+    #         raise Exception('nreps must be an int or a list of the same length'
+    #                         ' as the sequence')
+    #     elif not (isinstance(self.trig_waits, list) or
+    #               len(self.trig_waits) != len(self._elements)):
+    #         raise Exception('trig_waits must be an int or a list of the same '
+    #                         'length as the sequence')
+    #     elif not (isinstance(self.goto_states, list) or
+    #               len(self.goto_states) != len(self._elements)):
+    #         raise Exception('goto_states must be an int or a list of the same '
+    #                         'length as the sequence')
+    #     pass
+
+    # def _test_element_waveform_numbers(self):
+    #     lengths = [len(element) for element in self._elements]
+    #     # option1: all elements have same number of waveforms
+    #     option1 = lengths.count(lengths[0]) == len(self._elements)
+    #     # option2: first element has most waveforms and others have same number
+    #     if len(self._elements) > 1:
+    #         option2 = (all(i < lengths[0] for i in lengths[1:]) and
+    #                    (lengths.count(lengths[1]) == (len(lengths) - 1)))
+    #     else:
+    #         option2 = False
+    #     if not option1 or option2:
+    #         raise Exception(
+    #             'the elements of this sequence are '
+    #             'not of lengths [l, l, ...] or lengths'
+    #             ' [m, l, l, ...] where m > l : {}'.format(str(lengths)))
+    #     if option2:
+    #         raise NotImplementedError('awg upload doesn\'t support '
+    #                                   '  [m, l, l, ...] where m > l format:'
+    #                                   ' format given: {}'.format(str(lengths)))

@@ -84,26 +84,26 @@ class Element:
 
         self[waveform.channel] = waveform
 
-    def check(self):
-        """
-        Function which checks the element dictionary to have nonzero
-        length and that all the waveforms in the dictionary are of
-        equal length and then calls the waveform internal check on each.
-        """
-        if not self._waveforms:
-            raise Exception('no waveforms in element')
-        lengths = [len(w) for w in self._waveforms.values()]
-        if lengths.count(lengths[0]) != len(lengths):
-            raise Exception(
-                'the waveforms of this element are '
-                'not of equal length: {}'.format(str(lengths)))
-        for i, waveform in enumerate(self._waveforms.values()):
-            try:
-                waveform.check()
-            except Exception as e:
-                raise Exception(
-                    'error in waveform {}: {}'.format(i, e))
-        return True
+    # def check(self):
+    #     """
+    #     Function which checks the element dictionary to have nonzero
+    #     length and that all the waveforms in the dictionary are of
+    #     equal length and then calls the waveform internal check on each.
+    #     """
+    #     if not self._waveforms:
+    #         raise Exception('no waveforms in element')
+    #     lengths = [len(w) for w in self._waveforms.values()]
+    #     if lengths.count(lengths[0]) != len(lengths):
+    #         raise Exception(
+    #             'the waveforms of this element are '
+    #             'not of equal length: {}'.format(str(lengths)))
+    #     for i, waveform in enumerate(self._waveforms.values()):
+    #         try:
+    #             waveform.check()
+    #         except Exception as e:
+    #             raise Exception(
+    #                 'error in waveform {}: {}'.format(i, e))
+    #     return True
 
     # def unwrap_4dsp(self, folder):
     #     f = open(folder + 'waveform_0.txt', 'w')
