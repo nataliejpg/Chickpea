@@ -66,6 +66,10 @@ class Segment:
                                     '[\'delay_time\', \'duration_time\'], '
                                     'received: {}'.format(
                                         m, time_markers[m].keys()))
+                if any(type(val) is not list
+                       for val in time_markers[m].values()):
+                    raise Exception('time markers must be set as a list of '
+                                    'delays and durations')
 
         if points_markers is None:
             points_markers = {}
@@ -83,6 +87,10 @@ class Segment:
                                     '\'duration_points\'], received'
                                     ': {}'.format(m,
                                                   points_markers[m].keys()))
+                if any(type(val) is not list
+                       for val in points_markers[m].values()):
+                    raise Exception('points markers must be set as a list of '
+                                    'delays and durations')
 
         if raw_markers is None:
             raw_markers = {}
@@ -235,7 +243,10 @@ class Segment:
     points = property(fget=_get_points, fset=_set_points)
 
     def _get_duration(self):
-        return len(self) / self.func_args['SR']
+        try:
+            return len(self) / self.func_args['SR']
+        except Exception:
+            return None
 
     duration = property(fget=_get_duration)
 

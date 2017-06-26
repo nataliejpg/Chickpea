@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 from . import Segment
 
 # TODO: exception types
@@ -31,11 +32,9 @@ class Waveform:
             self._channel = None
         if length:
             self._wave = np.zeros(int(length))
-            self._markers = {1: np.zeros(int(length)),
-                             2: np.zeros(int(length))}
         else:
             self._wave = None
-            self._markers = None
+        self._markers = None
 
         self.segment_list = segment_list
         self._sample_rate = sample_rate
@@ -45,6 +44,9 @@ class Waveform:
     def _get_duration(self):
         if self._sample_rate is None:
             raise Exception('Cannot get duration as sample_rate is None')
+        elif self.segment_list is not None:
+            return sum(s.duration for s in self.segment_list
+                       if s.duration is not None)
         else:
             return len(self) / self._sample_rate
 
@@ -153,7 +155,7 @@ class Waveform:
         markers = {1: np.zeros(len(self), dtype=int),
                    2: np.zeros(len(self), dtype=int)}
 
-        if (self._markers is None) and (self.segment_list is not None):
+        if self.segment_list is not None:
             for i in [1, 2]:
                 start = 0
                 for seg in self.segment_list:
@@ -162,44 +164,43 @@ class Waveform:
                         markers[i][
                             (start + delay): (start + duration + delay)] = 1
                     start += len(seg)
-        else:
-            markers = self._markers
+        if self._markers is not None:
+            for i in [1, 2]:
+                for j, delay in enumerate(self._markers[i]['delay_points']):
+                    duration = self._markers[i]['duration_points'][j]
+                    markers[i][delay:(duration + delay)] = 1
         return markers
 
     markers = property(fget=_get_markers)
 
-    def set_marker(self, marker_num, start, stop):
+    def add_marker(self, marker_num, delay, duration):
         if self.wave is None:
             raise Exception('cannot set marker before setting wave')
-        elif len(self.wave) < stop:
+        elif len(self.wave) < (delay + duration):
             raise Exception('end of marker is beyond end of wave')
         elif marker_num not in [1, 2]:
             raise Exception('marker number not in (1, 2)')
-        if (self.segment_list is not None) and (self._markers is None):
-            print('Warning: Manually setting a marker on waveform will '
-                  'disregard any markers set on segments')
+        elif not all(type(d) is int for d in [delay, duration]):
+            raise TypeError('delay and duration must be integers as they'
+                            ' are numbers of points')
         if self._markers is None:
-            self._markers = {1: np.zeros(int(len(self))),
-                             2: np.zeros(int(len(self)))}
-        self._markers[marker_num][start:stop] = 1
+            self._markers = {1: {'delay_points': [],
+                                 'duration_points': []},
+                             2: {'delay_points': [],
+                                 'duration_points': []}}
+        self._markers[marker_num]['delay_points'].append(delay)
+        self._markers[marker_num]['duration_points'].append(duration)
 
-    def set_marker_array(self, marker_num, marker_array):
-        if self.wave is None:
-            raise Exception('cannot set marker before setting wave')
-        elif len(self.wave) != len(marker_array):
-            raise Exception('trying to set marker_1 of unexpected length')
-        elif not isinstance(marker_array, np.ndarray):
-            raise Exception('marker must be numpy array')
-        elif any(int(m) not in [0, 1] for m in marker_array):
-            raise Exception('marker values not in (0, 1)')
-        elif marker_num not in [0, 1]:
-            raise Exception('marker number not in (0, 1)')
-        if self.segment_list is not None:
-            print('Warning: Manually setting a marker on waveform will '
-                  'disregard any markers set on segments')
-        self._markers[marker_num] = marker_array.astype(int)
+    def clear_wave_markers(self):
+        self._markers = None
 
-    def add_segment(self, segment):
+    def clear_all_markers(self):
+        self._markers = None
+        if self.segment_list:
+            for s in self.segment_list:
+                s.clear_markers()
+
+    def add_segment(self, segment, position=None):
         """
         """
         if not isinstance(segment, Segment):
@@ -216,18 +217,27 @@ class Waveform:
         if self._wave is None:
             if self.segment_list is None:
                 self.segment_list = [segment]
-            else:
+            elif position is None:
                 self.segment_list.append(segment)
+            else:
+                self.segment_list.insert(position, segment)
+        elif position is not None:
+            raise Exception('Cannot insert segment into indexed position'
+                            ' if the waveform is not defined by a segment '
+                            'list')
         else:
             np.append(self._wave, segment.points)
             np.append(self._marker_1, np.zeros(len(segment)))
             np.append(self._marker_2, np.zeros(len(segment)))
 
+    # def copy(self):
+    #     new_waveform = Waveform(channel=self.channel,
+    #                             segment_list=self.segment_list)
+    #     if self.segment_list is None:
+    #         new_waveform.wave = self.wave
+    #         new_waveform.marker_1 = self.marker_1
+    #         new_waveform.marker_2 = self.marker_2
+    #     return new_waveform
+
     def copy(self):
-        new_waveform = Waveform(channel=self.channel,
-                                segment_list=self.segment_list)
-        if self.segment_list is None:
-            new_waveform.wave = self.wave
-            new_waveform.marker_1 = self.marker_1
-            new_waveform.marker_2 = self.marker_2
-        return new_waveform
+        return copy.deepcopy(self)

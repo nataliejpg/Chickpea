@@ -8,6 +8,7 @@ from . import Waveform
 # TODO: write 'check' behaviour
 # TODO: write tests
 # TODO: make _test_sequence_variables test that variable values are valid
+# TODO: docstrings
 
 
 class Sequence:
