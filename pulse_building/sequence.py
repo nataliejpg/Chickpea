@@ -2,13 +2,13 @@ import numpy as np
 import copy
 import os
 import matplotlib.pyplot as plt
-from . import Element
-from . import Waveform
+from . import Segment, Waveform, Element
 
 # TODO: write 'check' behaviour
 # TODO: write tests
 # TODO: make _test_sequence_variables test that variable values are valid
 # TODO: docstrings
+# TODO: test wrap
 
 
 class Sequence:
@@ -126,8 +126,8 @@ class Sequence:
         for element in self._elements:
             for i, chan in enumerate(chan_list):
                 wf_lists[i].append(element[chan].wave)
-                m1_lists[i].append(element[chan].marker_1)
-                m2_lists[i].append(element[chan].marker_2)
+                m1_lists[i].append(element[chan].marker[1])
+                m2_lists[i].append(element[chan].marker[2])
         if isinstance(self.nreps, int):
             nrep_list = [self.nreps] * len(self._elements)
         else:
@@ -194,7 +194,7 @@ class Sequence:
 
         self.nreps = nrep_list
         self.trig_waits = trig_wait_list
-        self.goto_states = goto_states
+        self.goto_states = goto_state_list
         self.jump_tos = jump_to_list
 
         for j in range(elem_length):
@@ -202,8 +202,12 @@ class Sequence:
             for i, chan in enumerate(chan_list):
                 waveform = Waveform(channel=chan)
                 waveform.wave = wf_lists[i][j]
-                waveform.marker_1 = m1_lists[i][j]
-                waveform.marker_2 = m2_lists[i][j]
+                markers = Segment._raw_to_points({1: m1_lists[i][j],
+                                                  2: m2_lists[i][j]})
+                for i in [1, 2]:
+                    for m in markers[i]:
+                        waveform.add_marker(i, m['delay_points'],
+                                            m['duration_points'])
                 element.add_waveform(waveform)
             self.add_element(element)
 
