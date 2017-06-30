@@ -52,11 +52,11 @@ class Sequence:
         self.variable_label = variable_label or variable
         self.variable_unit = variable_unit
         self.labels = labels or {}
-        if all(not i for i in [start, stop, step]):
-            self.variable_array = None
-        elif all(isinstance(i, (float, int)) for i in [start, stop, step]):
-            self.set_variable_array(start, stop, step)
-        else:
+        if all(isinstance(s, (float, int)) for s in [start, stop, step]):
+            self._start = start
+            self._stop = stop
+            self._step = step
+        elif any(s is not None for s in [start, stop, step]):
             raise TypeError('start, stop and step must either all be '
                             'set as numbers (floats or ints) or none set')
 
@@ -85,6 +85,27 @@ class Sequence:
 
     def __iter__(self):
         return iter(self._elements)
+
+    @property
+    def start(self):
+        try:
+            return self._start
+        except AttributeError:
+            return None
+
+    @property
+    def _get_stop(self):
+        try:
+            return self._stop
+        except AttributeError:
+            return None
+
+    @property
+    def _get_step(self):
+        try:
+            return self._step
+        except AttributeError:
+            return None
 
     def clear(self):
         """
@@ -213,18 +234,13 @@ class Sequence:
 
         self.check()
 
-    def set_variable_array(self, start, stop, step):
-        """
-        Function which sets the linear array of the variable being
-        varied between sequence elements.
-
-        Args:
-            - start (float)
-            - stop (float)
-            - step (float)
-        """
-        number = round(abs(stop - start) / step + 1)
-        self.variable_array = np.linspace(start, stop, num=number)
+    @property
+    def variable_array(self):
+        if any(s is None for s in [self.start, self.stop, self.step]):
+            return None
+        else:
+            number = round(abs(self._stop - self._start) / self._step + 1)
+            return np.linspace(self._start, self._stop, num=number)
 
     def add_element(self, element):
         """
