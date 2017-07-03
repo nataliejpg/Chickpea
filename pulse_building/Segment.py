@@ -4,6 +4,7 @@ import copy
 # TODO: exceptions
 # TODO: cut name?
 # TODO: unbound and bound markers coexisting happily?
+# TODO: int vs round
 
 
 class Segment:
@@ -138,6 +139,9 @@ class Segment:
 
     def __repr__(self):
         return self.name
+
+    def __format__(self, fmt):
+        return str(self.name).__format__(fmt)
 
     def __add__(self, other):
         """
@@ -375,9 +379,9 @@ class Segment:
         for m in np.array(raw_markers):
             points_markers[m] = {}
             nonzero_indices = np.nonzero(raw_markers[m])[0]
-            starts = np.array([s for s in nonzero_indices
+            starts = np.array([int(s) for s in nonzero_indices
                                if raw_markers[m][s - 1] != 1])
-            ends = np.array([s for s in nonzero_indices
+            ends = np.array([int(s) for s in nonzero_indices
                              if raw_markers[m][s + 1] != 1])
             marker_delays = starts
             marker_durations = ends - starts
@@ -403,9 +407,9 @@ class Segment:
         points_markers = {}
         for m in time_markers:
             points_markers[m] = {}
-            marker_delays = [round(d * sample_rate)
+            marker_delays = [int(d * sample_rate)
                              for d in time_markers[m]['delay_time']]
-            marker_durations = [round(d * sample_rate)
+            marker_durations = [int(d * sample_rate)
                                 for d in time_markers[m]['duration_time']]
             points_markers[m]['delay_points'] = marker_delays
             points_markers[m]['duration_points'] = marker_durations

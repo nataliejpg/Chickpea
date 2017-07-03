@@ -1,4 +1,5 @@
 import copy
+import matplotlib.pyplot as plt
 from shutil import copyfile
 from . import Waveform
 
@@ -84,6 +85,33 @@ class Element:
 
         self[waveform.channel] = waveform
 
+    def plot(self, channels=[1, 2]):
+        fig = plt.figure()
+        plt_count = len(channels)
+        for i, chan in enumerate(channels):
+            index = (plt_count * 100) + 10 + i + 1
+            ax = fig.add_subplot(index)
+            self[chan].plot(subplot=ax)
+        plt.tight_layout()
+        return fig
+
+    def print_segment_lists(self, channels=[1, 2]):
+        if any(sl is None for sl in [self[c].segment_list for c in channels]):
+            print('not all channels are made of segment lists')
+        else:
+            seg_len = len(self[channels[0]].segment_list)
+            if not all(len(self[c].segment_list) == seg_len for c in channels):
+                for c in channels:
+                    print('ch {}: {}'.format(c, self[c].segment_list))
+            else:
+                str_length = max(max(len(i.name)
+                                     for i in self[c].segment_list)
+                                 for c in channels)
+                template = ('{: <{width}}' * seg_len)
+                for c in channels:
+                    print('ch ', c, ': ', template.format(
+                        *self[c].segment_list, width=str_length))
+
     # def check(self):
     #     """
     #     Function which checks the element dictionary to have nonzero
@@ -133,7 +161,8 @@ class Element:
     #     f.close()
 
     #     for i in range(1, 6):
-    #         copyfile(folder + 'waveform_0.txt', folder + 'waveform_{}.txt'.format(i))
+    # copyfile(folder + 'waveform_0.txt', folder +
+    # 'waveform_{}.txt'.format(i))
 
     def copy(self):
         return copy.deepcopy(self)

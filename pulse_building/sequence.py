@@ -52,13 +52,14 @@ class Sequence:
         self.variable_label = variable_label or variable
         self.variable_unit = variable_unit
         self.labels = labels or {}
-        if all(isinstance(s, (float, int)) for s in [start, stop, step]):
-            self._start = start
-            self._stop = stop
-            self._step = step
-        elif any(s is not None for s in [start, stop, step]):
-            raise TypeError('start, stop and step must either all be '
-                            'set as numbers (floats or ints) or none set')
+        if any(s is not None for s in [start, stop, step]):
+            if not all(isinstance(s, (float, int))
+                       for s in [start, stop, step]):
+                raise TypeError('start, stop and step must either all be '
+                                'set as numbers (floats or ints) or none set')
+        self._start = start
+        self._stop = stop
+        self._step = step
 
     def __getitem__(self, key):
         return self._elements[key]
@@ -88,24 +89,23 @@ class Sequence:
 
     @property
     def start(self):
-        try:
-            return self._start
-        except AttributeError:
-            return None
+        return self._start
 
     @property
-    def _get_stop(self):
-        try:
-            return self._stop
-        except AttributeError:
-            return None
+    def stop(self):
+        return self._stop
 
     @property
-    def _get_step(self):
-        try:
-            return self._step
-        except AttributeError:
+    def step(self):
+        return self._step
+
+    @property
+    def variable_array(self):
+        if any(s is None for s in [self._start, self._stop, self._step]):
             return None
+        else:
+            number = round(abs(self._stop - self._start) / self._step + 1)
+            return np.linspace(self._start, self._stop, num=number)
 
     def clear(self):
         """
@@ -120,7 +120,9 @@ class Sequence:
         self.name = None
         self.variable = None
         self.variable_unit = None
-        self.variable_array = None
+        self._start = None
+        self._stop = None
+        self._step = None
 
     def unwrap(self):
         """
@@ -140,7 +142,7 @@ class Sequence:
 
                all others are arrays of the same length as the sequence
         """
-        chan_list = self.channels_used()
+        chan_list = self.get_channels_used()
         wf_lists = [[] for c in chan_list]
         m1_lists = [[] for c in chan_list]
         m2_lists = [[] for c in chan_list]
@@ -234,13 +236,6 @@ class Sequence:
 
         self.check()
 
-    @property
-    def variable_array(self):
-        if any(s is None for s in [self.start, self.stop, self.step]):
-            return None
-        else:
-            number = round(abs(self._stop - self._start) / self._step + 1)
-            return np.linspace(self._start, self._stop, num=number)
 
     def add_element(self, element):
         """
@@ -250,7 +245,7 @@ class Sequence:
             raise TypeError('cannot add element not of type Element')
         self._elements.append(element)
 
-    def channels_used(self, element_index=0):
+    def get_channels_used(self, element_index=0):
         """
         Function which calculates the channels used on an element
 
@@ -310,22 +305,13 @@ class Sequence:
         Returns:
             matplotlib fig
         """
-        fig = plt.figure()
-        plt_count = len(channels)
-        for i, chan in enumerate(channels):
-            index = (plt_count * 100) + 10 + i + 1
-            ax = fig.add_subplot(index)
-            ax.set_title('Channel {}'.format(chan))
-            ax.set_ylim([-1.1, 1.1])
-            ax.plot(self[elemnum][chan].wave, lw=1,
-                    color='#009FFF', label='wave')
-            ax.plot(self[elemnum][chan].markers[1], lw=1,
-                    color='#008B45', alpha=0.6, label='m1')
-            ax.plot(self[elemnum][chan].markers[2], lw=1,
-                    color='#FE6447', alpha=0.6, label='m2')
-            ax.legend(loc='upper right', fontsize=10)
-        plt.tight_layout()
+        elem = self[elemnum]
+        fig = elem.plot(channels=channels)
         return fig
+
+    def print_segment_lists(self, elemnum=0, channels=[1, 2]):
+        elem = self[elemnum]
+        elem.print_segment_lists(channels=channels)
 
     # def _test_variable_array_length(self):
     #     """

@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import matplotlib.pyplot as plt
 from . import Segment
 
 # TODO: exception types
@@ -230,14 +231,25 @@ class Waveform:
             np.append(self._marker_1, np.zeros(len(segment)))
             np.append(self._marker_2, np.zeros(len(segment)))
 
-    # def copy(self):
-    #     new_waveform = Waveform(channel=self.channel,
-    #                             segment_list=self.segment_list)
-    #     if self.segment_list is None:
-    #         new_waveform.wave = self.wave
-    #         new_waveform.marker_1 = self.marker_1
-    #         new_waveform.marker_2 = self.marker_2
-    #     return new_waveform
-
     def copy(self):
         return copy.deepcopy(self)
+
+    def plot(self, subplot=None):
+        if subplot is None:
+            fig, ax = plt.subplots()
+        else:
+            ax = subplot
+        if self.channel is not None:
+            ax.set_title('Channel {}'.format(self.channel))
+        ax.set_ylim([-1.1, 1.1])
+        ax.plot(self.wave, lw=1,
+                color='#009FFF', label='wave')
+        ax.plot(self.markers[1], lw=1,
+                color='#008B45', alpha=0.6, label='m1')
+        ax.plot(self.markers[2], lw=1,
+                color='#FE6447', alpha=0.6, label='m2')
+        ax.legend(loc='upper right', fontsize=10)
+        if subplot is None:
+            return fig
+        else:
+            return ax
