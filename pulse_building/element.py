@@ -11,7 +11,7 @@ from . import Waveform
 
 
 class Element:
-    def __init__(self):
+    def __init__(self, sample_rate=None):
         """
         Element class which represents the element of a sequence
         and is a dictionary of the waveforms running on channels of
@@ -21,7 +21,7 @@ class Element:
         """
 
         self._waveforms = {}
-        self._sample_rate = None
+        self._sample_rate = sample_rate
 
     def __getitem__(self, key):
         return self._waveforms[key]
@@ -104,13 +104,14 @@ class Element:
                 for c in channels:
                     print('ch {}: {}'.format(c, self[c].segment_list))
             else:
-                str_length = max(max(len(i.name)
-                                     for i in self[c].segment_list)
-                                 for c in channels)
-                template = ('{: <{width}}' * seg_len)
+                template = ''
+                for s in range(seg_len):
+                    str_length = max(len(self[c].segment_list[s].name)
+                                     for c in channels)
+                    template += '{: <' + str(str_length) + '}|'
                 for c in channels:
-                    print('ch ', c, ': ', template.format(
-                        *self[c].segment_list, width=str_length))
+                    print('ch ', c, ': ', template[:-1].format(
+                        *self[c].segment_list))
 
     # def check(self):
     #     """
