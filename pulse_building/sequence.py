@@ -1,7 +1,6 @@
 import numpy as np
 import copy
 import os
-import matplotlib.pyplot as plt
 from . import Segment, Waveform, Element
 
 # TODO: write 'check' behaviour
@@ -9,6 +8,7 @@ from . import Segment, Waveform, Element
 # TODO: make _test_sequence_variables test that variable values are valid
 # TODO: docstrings
 # TODO: test wrap
+# TODO: int round
 
 
 class Sequence:
