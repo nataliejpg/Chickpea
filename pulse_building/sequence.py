@@ -149,8 +149,8 @@ class Sequence:
         for element in self._elements:
             for i, chan in enumerate(chan_list):
                 wf_lists[i].append(element[chan].wave)
-                m1_lists[i].append(element[chan].marker[1])
-                m2_lists[i].append(element[chan].marker[2])
+                m1_lists[i].append(element[chan].markers[1])
+                m2_lists[i].append(element[chan].markers[2])
         if isinstance(self.nreps, int):
             nrep_list = [self.nreps] * len(self._elements)
         else:
