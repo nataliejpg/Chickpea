@@ -23,23 +23,3 @@ def gaussian_derivative(sigma, sigma_cutoff, amp, SR):
     t = np.linspace(-1 * sigma_cutoff * sigma, sigma_cutoff * sigma,
                     num=points)
     return -amp * t / sigma * np.exp(-(t / (2 * sigma))**2)
-
-
-def ramp_with_gaussian_rise():
-    raise NotImplementedError
-
-
-def sin_wave():
-    raise NotImplementedError
-
-
-def cos_wave():
-    raise NotImplementedError
-
-
-def sin_wave_gaussian_envelope():
-    raise NotImplementedError
-
-
-def cos_wave_gaussian_envolope():
-    raise NotImplementedError
