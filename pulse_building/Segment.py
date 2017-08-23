@@ -407,9 +407,9 @@ class Segment:
         points_markers = {}
         for m in time_markers:
             points_markers[m] = {}
-            marker_delays = [int(d * sample_rate)
+            marker_delays = [int(round(d * sample_rate))
                              for d in time_markers[m]['delay_time']]
-            marker_durations = [int(d * sample_rate)
+            marker_durations = [int(round(d * sample_rate))
                                 for d in time_markers[m]['duration_time']]
             points_markers[m]['delay_points'] = marker_delays
             points_markers[m]['duration_points'] = marker_durations

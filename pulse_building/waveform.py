@@ -31,8 +31,10 @@ class Waveform:
             self.channel = channel
         else:
             self._channel = None
-        if length:
+        if length is not None and segment_list is None:
             self._wave = np.zeros(int(length))
+        elif length is not None:
+            raise Exception('cannot set length and segment list')
         else:
             self._wave = None
         self._markers = None

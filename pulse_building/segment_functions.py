@@ -13,6 +13,14 @@ def gaussian(sigma, sigma_cutoff, amp, SR):
     return amp * np.exp(-(t**2 / (2 * sigma**2)))
 
 
+def stairs(start, stop, step, dur, SR):
+    step_num = int(round((stop - start) / step + 1))
+    step_dur = dur / step_num
+    step_points = int(round(SR * step_dur))
+    step_values = np.linspace(start, stop, num=step_num)
+    return np.hstack([np.ones(step_points) * val for val in step_values])
+
+
 def flat(amp, dur, SR):
     points = int(SR * dur)
     return amp * np.ones(points)
