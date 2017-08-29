@@ -22,7 +22,28 @@ Check out the examples in the jupyter notebooks found in the `examples` folder.
 ---------------
 Only works with Python 3
 
+### Installation
+
+Should work with just 
+```
+$ git clone https://github.com/nataliejpg/Chickpea.git $CHICKPEA_INSTALL_DIR
+$ cd $CHICKPEA_INSTALL_DIR
+$ pip install .
+```
+which will install `numpy`, `matplotlib` dependencies if not found. If you are using a [virtual enviroment](https://github.com/pyenv/pyenv-virtualenv) then you are likely to come across 
+`matplotlib` issues. `matplotlib` is not strictly necessary but if you do want to get it working
+the easiest way is to use [(Ana)conda](https://conda.io/docs/index.html)
+```
+$ conda install matplotlib package=2.0.1
+```
+
+You can now fire up a python 3 interpreter and go
+```
+>>> import chickpea as pb
+```
+
+If you want to run the examples you will also need to install jupyter by `pip` or `conda`
 
 ### The name
 ---------------
-William named his 'broadbean' <https://github.com/QCoDeS/broadbean> and I prefer chickpea as a pulse.
+[William](https://github.com/WilliamHPNielsen) named his 'broadbean' <https://github.com/QCoDeS/broadbean> and I prefer chickpea as a pulse.
