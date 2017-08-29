@@ -100,7 +100,6 @@ class Element:
             fig = plt.figure()
         except NameError as e:
             raise Warning('Could not create matplot figure {}'.format(e))
-        fig = plt.figure()
         plt_count = len(channels)
         for i, chan in enumerate(channels):
             index = (plt_count * 100) + 10 + i + 1

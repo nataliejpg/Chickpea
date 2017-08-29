@@ -330,8 +330,7 @@ class Sequence:
             matplotlib fig
         """
         elem = self[elemnum]
-        fig = elem.plot(channels=channels)
-        return fig
+        return elem.plot(channels=channels)
 
     def print_segment_lists(self, elemnum: int=0, channels: List[int] =[1, 2]):
         """
