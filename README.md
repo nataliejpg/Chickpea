@@ -24,7 +24,8 @@ Only works with Python 3
 
 ### Installation
 
-Should work with just 
+Should work by running the below, replacing $CHICKPEA_INSTALL_DIR with the directory you want
+ to install it into.
 ```
 $ git clone https://github.com/nataliejpg/Chickpea.git $CHICKPEA_INSTALL_DIR
 $ cd $CHICKPEA_INSTALL_DIR
