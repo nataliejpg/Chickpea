@@ -1,8 +1,13 @@
 import numpy as np
 import math
 import copy
-import matplotlib.pyplot as plt
 import logging
+import warnings
+
+try:
+    import matplotlib.pyplot as plt
+except RuntimeError as e:
+    warnings.warn('Could not import matplotlib {}'.format(e))
 
 from . import Segment
 
@@ -240,7 +245,10 @@ class Waveform:
             plot
         """
         if subplot is None:
-            fig, ax = plt.subplots()
+            try:
+                fig, ax = plt.subplots()
+            except NameError as e:
+                raise Warning('Could not create matplot figure {}'.format(e))
         else:
             ax = subplot
         if self.channel is not None:

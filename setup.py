@@ -20,10 +20,14 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
+        'Licence :: MIT Licence',
         'Programming Language :: Python :: 3.5'
     ],
 
-    keywords='Pulsebuilding signal processing arbitrary waveforms',
+    keywords='pulsebuilding signal arbitrary waveform generator',
 
-    url='https://github.com/nataliejpg/Chickpea'
+    url='https://github.com/nataliejpg/Chickpea',
+
+    python_requires='>=3',
+
 )

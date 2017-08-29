@@ -1,7 +1,12 @@
 import copy
-import matplotlib.pyplot as plt
 import logging
 from typing import List
+import warnings
+
+try:
+    import matplotlib.pyplot as plt
+except RuntimeError as e:
+    warnings.warn('Could not import matplotlib {}'.format(e))
 
 from . import Waveform
 
@@ -91,6 +96,10 @@ class Element:
         Returns:
             plot
         """
+        try:
+            fig = plt.figure()
+        except NameError as e:
+            raise Warning('Could not create matplot figure {}'.format(e))
         fig = plt.figure()
         plt_count = len(channels)
         for i, chan in enumerate(channels):
