@@ -4,8 +4,8 @@ An pulse building module to help with building pulses and sequences for arbitrar
 
 ### Motivation
 --------------
-Make it possible to abstract pulses into gates, procudures or similar.
- To be able ot make use of the sequencing mode of the AWG5014C with QCoDeS
+Make it possible to abstract pulses into gates, procedures or similar.
+ To be able to make use of the sequencing mode of the AWG5014C with QCoDeS
 
 ### Description
 ---------------
