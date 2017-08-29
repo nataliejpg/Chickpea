@@ -43,6 +43,13 @@ You can now fire up a python 3 interpreter and go
 ```
 
 If you want to run the examples you will also need to install jupyter by `pip` or `conda`
+```
+$ pip install jupyter
+```
+or 
+```
+$ conda install jupyter
+```
 
 ### The name
 ---------------
