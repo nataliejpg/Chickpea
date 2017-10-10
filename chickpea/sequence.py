@@ -195,14 +195,27 @@ class Sequence:
                all others are arrays of the same length as the sequence
         """
         chan_list = self._get_channels_used()
-        wf_lists = [[] for c in chan_list]
-        m1_lists = [[] for c in chan_list]
-        m2_lists = [[] for c in chan_list]
+        awg_ch_dict = {}
+        wf_dict = {}
+        m1_dict = {}
+        m2_dict = {}
+        for chan in chan_list:
+            awg, channel = divmod(chan, 4)
+            if awg not in awg_ch_dict:
+                awg_ch_dict[awg] = []
+            awg_ch_dict[awg].append(channel)
+        for awg, ch_list in awg_ch_dict.iteritems():
+            chan_list.sort()
+            wf_dict[awg] = [[] for c in ch_list]
+            m1_dict[awg] = [[] for c in ch_list]
+            m2_dict[awg] = [[] for c in ch_list]
+
         for element in self._elements:
-            for i, chan in enumerate(chan_list):
-                wf_lists[i].append(element[chan].wave)
-                m1_lists[i].append(element[chan].markers[1])
-                m2_lists[i].append(element[chan].markers[2])
+            for awg, ch_list in awg_ch_dict.iteritems():
+                for i, ch in enumerate(ch_list):
+                    wf_dict[awg][i].append(element[ch].wave)
+                    m1_dict[awg][i].append(element[ch].markers[1])
+                    m2_dict[awg][i].append(element[ch].markers[2])
         if isinstance(self.nreps, int):
             nrep_list = [self.nreps] * len(self._elements)
         else:
@@ -220,8 +233,13 @@ class Sequence:
             jump_to_list = [self.jump_tos] * len(self._elements)
         else:
             jump_to_list = self.jump_tos
-        return (wf_lists, m1_lists, m2_lists, nrep_list,
-                trig_wait_list, goto_state_list, jump_to_list, chan_list)
+        unwrapped_tuples = []
+        for awg in awg_ch_dict:
+            ch_list = awg_ch_dict[awg]
+            unwrapped_tuples.append(
+                (wf_dict[awg], m1_dict[awg], m2_dict[awg], nrep_list,
+                    trig_wait_list, goto_state_list, jump_to_list, ch_list))
+        return unwrapped_tuples
 
     def wrap(self, tup: Tuple[tuple, dict]):
         """
@@ -332,7 +350,7 @@ class Sequence:
         elem = self[elemnum]
         return elem.plot(channels=channels)
 
-    def print_segment_lists(self, elemnum: int=0, channels: List[int] =[1, 2]):
+    def print_segment_lists(self, elemnum: int=0, channels: List[int]=[1, 2]):
         """
         Prints segment lists for specific element
 
