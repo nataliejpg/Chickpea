@@ -335,7 +335,7 @@ class Sequence:
     def pop(self, *args):
         return self._elements.pop(*args)
 
-    def plot(self, elemnum: int=0, channels: List[int]=[1, 2]):
+    def plot(self, elemnum: int=0, channels: List[int]=None):
         """
         Function which plots channels and markers
 

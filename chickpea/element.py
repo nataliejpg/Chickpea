@@ -85,7 +85,7 @@ class Element:
             waveform.channel = channel
         self[waveform.channel] = waveform
 
-    def plot(self, channels: List[int]=[1, 2]):
+    def plot(self, channels: List[int]=None):
         """
         Plots the waves and markers from selected channels
         in a matplotlib.pyplot subplot
@@ -96,6 +96,8 @@ class Element:
         Returns:
             plot
         """
+        if channels is None:
+            channels = list(self.keys())
         try:
             fig = plt.figure()
         except NameError as e:
@@ -108,10 +110,12 @@ class Element:
         plt.tight_layout()
         return fig
 
-    def print_segment_lists(self, channels=[1, 2]):
+    def print_segment_lists(self, channels: List[int]=None):
         """
         Prints a formatted segment list for each channel of the element
         """
+        if channels is None:
+            channels = list(self.keys())
         if any(sl is None for sl in [self[c].segment_list for c in channels]):
             print('not all channels are made of segment lists')
         else:
