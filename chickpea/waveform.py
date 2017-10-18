@@ -42,7 +42,7 @@ class Waveform:
             self._wave = None
         self._markers = None
 
-        self.segment_list = segment_list
+        self.segment_list = copy.deepcopy(segment_list)
         if sample_rate is not None:
             self.sample_rate = sample_rate
         else:
