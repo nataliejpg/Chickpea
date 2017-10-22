@@ -213,11 +213,11 @@ class Waveform:
                                        segment.func_args["SR"]))
         if self._wave is None:
             if self.segment_list is None:
-                self.segment_list = [segment]
+                self.segment_list = [copy.deepcopy(segment)]
             elif position is None:
-                self.segment_list.append(segment)
+                self.segment_list.append(copy.deepcopy(segment))
             else:
-                self.segment_list.insert(position, segment)
+                self.segment_list.insert(position, copy.deepcopy(segment))
         elif position is not None:
             raise RuntimeError('Cannot insert segment into indexed position'
                                ' if the waveform is not defined by a segment '
