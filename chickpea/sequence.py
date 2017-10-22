@@ -350,7 +350,7 @@ class Sequence:
         elem = self[elemnum]
         return elem.plot(channels=channels)
 
-    def print_segment_lists(self, elemnum: int=0, channels: List[int]=[1, 2]):
+    def print_segment_lists(self, elemnum: int=0, channels: List[int]=None):
         """
         Prints segment lists for specific element
 
