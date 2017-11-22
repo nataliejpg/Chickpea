@@ -200,18 +200,19 @@ class Sequence:
         m1_dict = {}
         m2_dict = {}
         for chan in chan_list:
-            awg, channel = divmod(chan, 4)
+            awg, channel = divmod(chan-1, 4)
+            channel += 1
             if awg not in awg_ch_dict:
                 awg_ch_dict[awg] = []
             awg_ch_dict[awg].append(channel)
-        for awg, ch_list in awg_ch_dict.iteritems():
+        for awg, ch_list in awg_ch_dict.items():
             chan_list.sort()
             wf_dict[awg] = [[] for c in ch_list]
             m1_dict[awg] = [[] for c in ch_list]
             m2_dict[awg] = [[] for c in ch_list]
 
         for element in self._elements:
-            for awg, ch_list in awg_ch_dict.iteritems():
+            for awg, ch_list in awg_ch_dict.items():
                 for i, ch in enumerate(ch_list):
                     wf_dict[awg][i].append(element[ch].wave)
                     m1_dict[awg][i].append(element[ch].markers[1])
